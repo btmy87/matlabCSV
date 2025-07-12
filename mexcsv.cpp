@@ -24,20 +24,15 @@ public:
     if (!inFile.is_open())
       mexPrintError("Could not open file " + filename);
 
-    readHeader(inFile, outputs, rowVarNames);
-    // outputs[1] = factory.createCellArray({1, 1});
-    // outputs[1][0] = factory.createScalar(-9999.0);
-
-    // read data
-    // just a blank for now
-    outputs[0] = factory.createCellArray({1, 1});
-    outputs[0][0] = factory.createScalar(-9999.0);
+    size_t nVars = readHeader(inFile, outputs, rowVarNames);
+    skipRows(inFile, rowsSkip);
+    readData(inFile, nVars, outputs);
 
     // close file
     inFile.close();
   }
 
-  void readHeader(std::ifstream &inFile, matlab::mex::ArgumentList &outputs, size_t rowVarNames)
+  size_t readHeader(std::ifstream &inFile, matlab::mex::ArgumentList &outputs, size_t rowVarNames)
   {
     std::string line;
     size_t irow = 0;
@@ -57,12 +52,65 @@ public:
     }
 
     // put into output cell array
-    outputs[1] = factory.createCellArray({1, varNames.size()});
-    for (size_t i = 0; i < varNames.size(); ++i)
+    size_t nVars = varNames.size();
+    outputs[1] = factory.createCellArray({1, nVars});
+    for (size_t i = 0; i < nVars; ++i)
     {
       outputs[1][i] = varNames[i];
     }
+
+    return nVars;
   };
+
+  void skipRows(std::ifstream &inFile, size_t rowsSkip)
+  {
+    std::string line;
+    size_t irow = 0;
+    while (irow < rowsSkip && std::getline(inFile, line))
+    {
+      ++irow;
+    }
+  }
+
+  void readData(std::ifstream &inFile, size_t nVars, matlab::mex::ArgumentList &outputs)
+  {
+    std::vector<std::vector<double>> dataCols(nVars);
+    std::string line;
+    while (std::getline(inFile, line))
+    {
+      std::istringstream lineStream(line);
+      std::string tempVal;
+      size_t icol = 0;
+      while (icol < nVars && std::getline(lineStream, tempVal, ','))
+      {
+        try
+        {
+          double val = std::stod(tempVal);
+          dataCols[icol].push_back(val);
+        }
+        catch (const std::invalid_argument &)
+        {
+          // non-numeric data, put in NaN
+          dataCols[icol].push_back(std::numeric_limits<double>::quiet_NaN());
+        }
+        ++icol;
+      }
+      // if fewer columns than nVars, fill in remaining with NaN
+      while (icol < nVars)
+      {
+        dataCols[icol].push_back(std::numeric_limits<double>::quiet_NaN());
+        ++icol;
+      }
+    }
+    outputs[0] = factory.createCellArray({1, nVars});
+    for (int i = 0; i < nVars; ++i)
+    {
+      matlab::data::TypedArray<double> colArray = factory.createArray(
+          {dataCols[i].size(), 1}, dataCols[i].begin(), dataCols[i].end(),
+          matlab::data::InputLayout::COLUMN_MAJOR);
+      outputs[0][i] = std::move(colArray);
+    }
+  }
 
   void checkArguments(matlab::mex::ArgumentList &outputs, matlab::mex::ArgumentList &inputs)
   {
