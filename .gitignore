@@ -1,4 +1,5 @@
 *.asv
 *.obj
 regex
-
+*.mexw64
+*.pdb

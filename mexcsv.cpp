@@ -1,4 +1,5 @@
 #include "mex.hpp"
+#include "mexAdapter.hpp"
 
 #include <cstddef>
 #include <string>
@@ -23,7 +24,21 @@ public:
     if (!inFile.is_open())
       mexPrintError("Could not open file " + filename);
 
-    // read header
+    readHeader(inFile, outputs, rowVarNames);
+    // outputs[1] = factory.createCellArray({1, 1});
+    // outputs[1][0] = factory.createScalar(-9999.0);
+
+    // read data
+    // just a blank for now
+    outputs[0] = factory.createCellArray({1, 1});
+    outputs[0][0] = factory.createScalar(-9999.0);
+
+    // close file
+    inFile.close();
+  }
+
+  void readHeader(std::ifstream &inFile, matlab::mex::ArgumentList &outputs, size_t rowVarNames)
+  {
     std::string line;
     size_t irow = 0;
     while (irow < rowVarNames && std::getline(inFile, line))
@@ -31,6 +46,7 @@ public:
       // skip rows up to rowVarNames
       ++irow;
     }
+    std::getline(inFile, line);
     // data from rowVarNames should be in 'line'
     std::istringstream lineStream(line);
     std::vector<matlab::data::CharArray> varNames;
@@ -46,18 +62,11 @@ public:
     {
       outputs[1][i] = varNames[i];
     }
-
-    // read data
-    // just a blank for now
-    outputs[0] = factory.createCellArray({1, 1});
-
-    // close file
-    inFile.close();
-  }
+  };
 
   void checkArguments(matlab::mex::ArgumentList &outputs, matlab::mex::ArgumentList &inputs)
   {
-    if (inputs.size() != 0)
+    if (inputs.size() != 3)
       mexPrintError("Expected 3 inputs");
     if (outputs.size() > 2)
       mexPrintError("Expected at most 2 outputs");
