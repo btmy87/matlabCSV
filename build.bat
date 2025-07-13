@@ -5,8 +5,8 @@ set MATLABROOT=C:\apps\MATLAB\R2025a\extern
 :: cpp options from running mex with -n option
 :: ommitted /GR, statically linking, /MT instead of MD
 set CLOPTS=/nologo /c /Zc:__cplusplus /Zp8 /W3 /EHs
-::set CLOPTS=%CLOPTS% /MT /O2 /Oy- /DNDEBUG
-set CLOPTS=%CLOPTS% /MT /Od /DDEBUG /Zi
+set CLOPTS=%CLOPTS% /MT /O2 /Oy- /DNDEBUG /Zi
+::set CLOPTS=%CLOPTS% /MT /Od /DDEBUG /Zi
 set CLOPTS=%CLOPTS% /DMATLAB_DEFAULT_RELEASE=R2017b  /DUSE_MEX_CMD   
 set CLOPTS=%CLOPTS% /D_CRT_SECURE_NO_DEPRECATE /D_SCL_SECURE_NO_DEPRECATE 
 set CLOPTS=%CLOPTS% /D_SECURE_SCL=0   /DMATLAB_MEX_FILE

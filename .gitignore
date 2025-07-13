@@ -3,3 +3,5 @@
 regex
 *.mexw64
 *.pdb
+*.diagsession 
+test2.csv 
