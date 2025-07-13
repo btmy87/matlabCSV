@@ -5,3 +5,4 @@ regex
 *.pdb
 *.diagsession 
 test2.csv 
+.vscode 
