@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <stdlib.h>
+#include <charconv>
 
 class MexFunction : public matlab::mex::Function
 {
@@ -96,14 +97,23 @@ public:
   {
 
     std::vector<std::vector<double>> dataCols(nVars);
-    char *bufend = buf + nbuf;
+    const char *bufend = buf + nbuf;
     char *ibuf = buf;
     char *ibufnew = buf;
     while (ibuf < bufend && *ibuf != '\0')
     {
       for (size_t ivar = 0; ivar < nVars; ++ivar)
       {
+        double temp;
+        const char *ibuftemp = ibuf;
+#ifdef _MSC_VER
+        std::from_chars_result res = std::from_chars(ibuftemp, bufend, temp);
+        ibufnew = (char *)res.ptr + 1;
+        dataCols[ivar].push_back(temp);
+#else
+        //  mingw 8.1 of g++ doesn't support from_chars for double
         dataCols[ivar].push_back(strtod(ibuf, &ibufnew));
+#endif
         ibuf = ibufnew + 1; // skip comma
       }
     }

@@ -4,7 +4,7 @@ set MEXNAME=mexcsv
 set MATLABROOT=C:\apps\MATLAB\R2025a\extern
 :: cpp options from running mex with -n option
 :: ommitted /GR, statically linking, /MT instead of MD
-set CLOPTS=/nologo /c /Zc:__cplusplus /Zp8 /W3 /EHs
+set CLOPTS=/nologo /c /Zc:__cplusplus /Zp8 /W3 /EHs /std:c++17
 set CLOPTS=%CLOPTS% /MT /O2 /Oy- /DNDEBUG /Zi
 ::set CLOPTS=%CLOPTS% /MT /Od /DDEBUG /Zi
 set CLOPTS=%CLOPTS% /DMATLAB_DEFAULT_RELEASE=R2017b  /DUSE_MEX_CMD   
