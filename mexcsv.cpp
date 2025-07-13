@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <string>
 #include <fstream>
+#include <stdlib.h>
 
 class MexFunction : public matlab::mex::Function
 {
@@ -27,10 +28,10 @@ public:
     size_t nVars = readHeader(inFile, outputs, rowVarNames);
     skipRows(inFile, rowsSkip);
 
-    std::string stringbuf(""); // set a value so we get a non-null pointer
-                               // read data into buffer
-    readData(inFile, stringbuf);
-    parseData(stringbuf, nVars, outputs);
+    char *buf = NULL;
+    size_t nbuf;
+    readData(inFile, &buf, nbuf);
+    parseData(buf, nbuf, nVars, outputs);
 
     // close file
     inFile.close();
@@ -76,7 +77,7 @@ public:
     }
   }
 
-  void readData(std::ifstream &inFile, std::string &stringbuf)
+  void readData(std::ifstream &inFile, char **buf, size_t &nbuf)
   {
     // read rest of file into buffer
     size_t pos = inFile.tellg();
@@ -84,49 +85,29 @@ public:
     size_t fsize = ((size_t)inFile.tellg()) - pos;
     inFile.seekg(pos, std::ios::beg);
 
-    char *buf = new char[fsize + 1]{};
+    nbuf = fsize + 1;
+    *buf = new char[nbuf]{};
 
-    stringbuf.resize(fsize + 1);
-    inFile.read(buf, fsize);
-    buf[fsize] = '\0'; // null terminate
-    stringbuf = buf;
-    delete[] buf;
+    inFile.read(*buf, fsize);
+    (*buf)[fsize] = '\0'; // null terminate
   }
 
-  void parseData(std::string &stringbuf, size_t nVars, matlab::mex::ArgumentList &outputs)
+  void parseData(char *buf, size_t nbuf, size_t nVars, matlab::mex::ArgumentList &outputs)
   {
-    std::istringstream inFile(stringbuf);
 
     std::vector<std::vector<double>> dataCols(nVars);
-    std::string line;
-    while (std::getline(inFile, line))
+    char *bufend = buf + nbuf;
+    char *ibuf = buf;
+    char *ibufnew = buf;
+    while (ibuf < bufend && *ibuf != '\0')
     {
-      if (line.empty())
-        continue; // skip empty lines
-      std::istringstream lineStream(line);
-      std::string tempVal;
-      size_t icol = 0;
-      while (icol < nVars && std::getline(lineStream, tempVal, ','))
+      for (size_t ivar = 0; ivar < nVars; ++ivar)
       {
-        try
-        {
-          double val = std::stod(tempVal);
-          dataCols[icol].push_back(val);
-        }
-        catch (const std::invalid_argument &)
-        {
-          // non-numeric data, put in NaN
-          dataCols[icol].push_back(std::numeric_limits<double>::quiet_NaN());
-        }
-        ++icol;
-      }
-      // if fewer columns than nVars, fill in remaining with NaN
-      while (icol < nVars)
-      {
-        dataCols[icol].push_back(std::numeric_limits<double>::quiet_NaN());
-        ++icol;
+        dataCols[ivar].push_back(strtod(ibuf, &ibufnew));
+        ibuf = ibufnew + 1; // skip comma
       }
     }
+
     outputs[0] = factory.createCellArray({1, nVars});
     for (int i = 0; i < nVars; ++i)
     {
