@@ -18,7 +18,7 @@ set LINKOPTS=%LINKOPTS% /DLL
 set LINKOPTS=%LINKOPTS% /OUT:mexListDlls.mexw64
 set LINKOPTS=%LINKOPTS% /EXPORT:mexFunction
 set LINKOPTS=%LINKOPTS% /EXPORT:mexfilerequiredapiversion
-set LINKOPTS=%LINKOPTS% /DEBUG
+set LINKOPTS=%LINKOPTS% /DEBUG /OPT:NOREF /OPT:NOICF /INCREMENTAL:NO
 
 set LINKLIBS=/LIBPATH:"%MATLABROOT%\lib\win64\microsoft"
 set LINKLIBS=%LINKLIBS% libmex.lib libmx.lib libmat.lib 

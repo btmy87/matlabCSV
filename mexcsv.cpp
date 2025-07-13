@@ -26,7 +26,11 @@ public:
 
     size_t nVars = readHeader(inFile, outputs, rowVarNames);
     skipRows(inFile, rowsSkip);
-    readData(inFile, nVars, outputs);
+
+    std::string stringbuf(""); // set a value so we get a non-null pointer
+                               // read data into buffer
+    readData(inFile, stringbuf);
+    parseData(stringbuf, nVars, outputs);
 
     // close file
     inFile.close();
@@ -72,12 +76,33 @@ public:
     }
   }
 
-  void readData(std::ifstream &inFile, size_t nVars, matlab::mex::ArgumentList &outputs)
+  void readData(std::ifstream &inFile, std::string &stringbuf)
   {
+    // read rest of file into buffer
+    size_t pos = inFile.tellg();
+    inFile.seekg(0, std::ios::end);
+    size_t fsize = ((size_t)inFile.tellg()) - pos;
+    inFile.seekg(pos, std::ios::beg);
+
+    char *buf = new char[fsize + 1]{};
+
+    stringbuf.resize(fsize + 1);
+    inFile.read(buf, fsize);
+    buf[fsize] = '\0'; // null terminate
+    stringbuf = buf;
+    delete[] buf;
+  }
+
+  void parseData(std::string &stringbuf, size_t nVars, matlab::mex::ArgumentList &outputs)
+  {
+    std::istringstream inFile(stringbuf);
+
     std::vector<std::vector<double>> dataCols(nVars);
     std::string line;
     while (std::getline(inFile, line))
     {
+      if (line.empty())
+        continue; // skip empty lines
       std::istringstream lineStream(line);
       std::string tempVal;
       size_t icol = 0;
