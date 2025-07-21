@@ -6,3 +6,4 @@ regex
 *.diagsession 
 test2.csv 
 .vscode 
+build* 
