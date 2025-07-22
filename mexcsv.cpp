@@ -5,7 +5,10 @@
 #include <string>
 #include <fstream>
 #include <stdlib.h>
+
+#ifdef HAVE_FROM_CHARS
 #include <charconv>
+#endif
 
 class MexFunction : public matlab::mex::Function
 {
@@ -106,7 +109,8 @@ public:
       {
         double temp;
         const char *ibuftemp = ibuf;
-#ifdef _MSC_VER
+#ifdef HAVE_FROM_CHARS
+        // use from_chars if available (C++17)
         std::from_chars_result res = std::from_chars(ibuftemp, bufend, temp);
         ibufnew = (char *)res.ptr + 1;
         dataCols[ivar].push_back(temp);
