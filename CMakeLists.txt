@@ -4,7 +4,8 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 project(mexCSV LANGUAGES CXX)
 
 find_package(Matlab REQUIRED)
-#add_library(mexCSV SHARED mexCSV.cpp)
+
+option(USE_FAST_FLOAT "Use the fast_float library for from_chars support" OFF)
 
 # check for from_chars support
 set(SRC_FROM_CHARS_TEST "
@@ -24,10 +25,16 @@ matlab_add_mex(NAME mexCSV
                SHARED 
                SRC mexCSV.cpp)
 
-if(HAVE_FROM_CHARS)
+# desire static linking for easier mex distribution
+target_link_options(mexCSV PRIVATE -static)
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/extern/fast_float" AND USE_FAST_FLOAT)
+  add_subdirectory(extern/fast_float)
+  message(STATUS "Using fast_float library for from_chars support")
+elseif(HAVE_FROM_CHARS)
   target_compile_definitions(mexCSV PRIVATE HAVE_FROM_CHARS)
-  message("Compiler supports std::from_chars")
   target_compile_features(mexCSV PRIVATE cxx_std_17)
+  message(STATUS "Compiler supports std::from_chars")
 else()
-  message("Compiler does not support std::from_chars")
+  message(STATUS "Compiler does not support std::from_chars")
 endif()

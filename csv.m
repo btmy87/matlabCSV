@@ -12,7 +12,7 @@ arguments
   rowsSkip (1, 1) {mustBeNonnegative} = 0
 end
 
-[vars, varnames] = mexcsv(char(filename), rowVarNames, rowsSkip);
+[vars, varnames] = mexCSV(char(filename), rowVarNames, rowsSkip);
 varnames = strtrim(varnames);
 out = table.init(vars,length(vars{1}),{},length(vars),varnames);
 end

@@ -6,8 +6,24 @@
 #include <fstream>
 #include <stdlib.h>
 
+// use standard from_chars if available
+// and not using fast_float
 #ifdef HAVE_FROM_CHARS
+#ifndef USE_FAST_FLOAT
 #include <charconv>
+using std::from_chars;
+using std::from_chars_result;
+#endif
+#endif
+
+#ifdef USE_FAST_FLOAT
+// define HAVE_FROM_CHARS for use below
+#ifndef HAVE_FROM_CHARS
+#define HAVE_FROM_CHARS
+#endif
+#include "fast_float/fast_float.h"
+using fast_float::from_chars;
+using fast_float::from_chars_result;
 #endif
 
 class MexFunction : public matlab::mex::Function
@@ -39,6 +55,7 @@ public:
 
     // close file
     inFile.close();
+    delete[] buf;
   }
 
   size_t readHeader(std::ifstream &inFile, matlab::mex::ArgumentList &outputs, size_t rowVarNames)
@@ -111,7 +128,7 @@ public:
         const char *ibuftemp = ibuf;
 #ifdef HAVE_FROM_CHARS
         // use from_chars if available (C++17)
-        std::from_chars_result res = std::from_chars(ibuftemp, bufend, temp);
+        from_chars_result res = from_chars(ibuftemp, bufend, temp);
         ibufnew = (char *)res.ptr + 1;
         dataCols[ivar].push_back(temp);
 #else
