@@ -29,7 +29,7 @@ matlab_add_mex(NAME mexCSV
 target_link_options(mexCSV PRIVATE -static)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/extern/fast_float" AND USE_FAST_FLOAT)
-  add_subdirectory(extern/fast_float)
+  target_include_directories(mexCSV PRIVATE extern/fast_float/include)
   message(STATUS "Using fast_float library for from_chars support")
 elseif(HAVE_FROM_CHARS)
   target_compile_definitions(mexCSV PRIVATE HAVE_FROM_CHARS)
